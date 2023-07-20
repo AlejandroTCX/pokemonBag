@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Generar y descargar PDF con jsPDF</title>
+  <script src="jspdf.debug.js"></script>
+</head>
+<body>
+  <h1>Generar y descargar PDF con jsPDF</h1>
+
+  <button onclick="generatePDF()">Generar y descargar PDF</button>
+
+  <script>
+    function generatePDF() {
+      // Crear una instancia de jsPDF
+      const doc = new jsPDF();
+
+      // Agregar contenido al PDF
+      doc.setFontSize(20);
+      doc.text('Ejemplo de PDF generado con jsPDF', 10, 20);
+
+      // Guardar el PDF
+      doc.save('archivo.pdf');
+    }
+  </script>
+</body>
+</html>

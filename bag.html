@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Pokédex - Bolsa</title>
+  <style>
+    /* Estilos CSS aquí */
+    body {
+      background-color: #ffcb05;
+      font-family: Arial, sans-serif;
+    }
+
+    .bag-container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .bag-title {
+      text-align: center;
+      color: #003a70;
+      margin-top: 20px;
+    }
+
+    .pokemon-card {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: calc(100% / 3 - 20px);
+      margin: 10px;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      background-color: #fff;
+      transition: transform 0.3s ease;
+    }
+
+    .pokemon-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .pokemon-name {
+      color: #003a70;
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .pokemon-image {
+      width: 150px;
+      height: 150px;
+      margin-bottom: 10px;
+    }
+
+    .remove-button {
+      background-color: #ff3b30;
+      color: #fff;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .remove-button:hover {
+      background-color: #c70000;
+    }
+
+    .generate-pdf-button {
+      background-color: #003a70;
+      color: #fff;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    .generate-pdf-button:hover {
+      background-color: #002650;
+    }
+  </style>
+</head>
+<body>
+  <h1 class="bag-title">Bolsa de Pokémon</h1>
+
+  <div class="bag-container" id="pokemon-bag-container"></div>
+
+  <form id="email-form">
+    <label for="email-input">Ingrese su dirección de correo electrónico:</label>
+    <input type="email" id="email-input" required>
+    <button type="submit" class="generate-pdf-button" id="generate-pdf">Generar PDF y Enviar</button>
+  </form>
+
+  <script src="jspdf.debug.js"></script>
+  <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+  <script>
+    (function() {
+      emailjs.init('KTsOonNiQL10n24n9');
+    })();
+
+    // Obtener datos de la bolsa desde localStorage
+    const bagData = localStorage.getItem('pokemon-bag');
+    const pokemonBag = bagData ? JSON.parse(bagData) : [];
+
+    // Renderizar los Pokémon de la bolsa
+    const pokemonBagContainer = document.getElementById('pokemon-bag-container');
+
+    pokemonBag.forEach(pokemon => {
+      const pokemonCard = createPokemonCard(pokemon);
+      pokemonBagContainer.appendChild(pokemonCard);
+    });
+
+    // Función para eliminar un Pokémon de la bolsa
+    function removeFromBag(index) {
+      pokemonBag.splice(index, 1);
+      localStorage.setItem('pokemon-bag', JSON.stringify(pokemonBag));
+
+      // Volver a renderizar los Pokémon de la bolsa
+      pokemonBagContainer.innerHTML = '';
+      pokemonBag.forEach(pokemon => {
+        const pokemonCard = createPokemonCard(pokemon);
+        pokemonBagContainer.appendChild(pokemonCard);
+      });
+    }
+
+    // Función para generar un PDF con los datos de la bolsa y enviarlo por correo electrónico
+    function generatePDF(event) {
+      event.preventDefault(); // Evitar que el formulario se envíe de forma predeterminada
+
+      const doc = new jsPDF();
+      let yOffset = 20;
+
+      doc.setFontSize(20);
+      doc.text('Pokémon guardados', 80, yOffset);
+
+      yOffset += 10;
+
+      pokemonBag.forEach((pokemon, index) => {
+        yOffset += 10;
+        doc.setFontSize(16);
+        doc.text(`Pokémon ${index + 1}: ${pokemon.name}`, 20, yOffset);
+      });
+      doc.save('pokemon-bag.pdf');
+
+      // Convertir el PDF a una cadena base64
+    const pdfDataUri = doc.output('datauristring');
+    const pdfBase64 = pdfDataUri.split(',')[1]; // Obtener solo los datos base64 sin la parte del encabezado
+
+    // Crear el objeto de archivo adjunto
+    const pdfBlob = b64toBlob(pdfBase64, 'application/pdf');
+    const attachment = new File([pdfBlob], 'pokemon-bag.pdf', { type: 'application/pdf' });
+
+      const userEmail = document.getElementById('email-input').value;
+      if (userEmail) {
+        const emailParams = {
+          to_email: userEmail,
+          from_name: userEmail,
+          subject: 'Pokémon Bag PDF',
+          message: 'Hola, te envio los datos de tu pokemon de tu bolsa',
+          attachments: [attachment],
+  
+        };
+
+        emailjs.send('service_edfdkom', 'template_sz7k718', emailParams)
+          .then(function(response) {
+            console.log('Email enviado con éxito:', response);
+          }, function(error) {
+            console.error('Error al enviar el email:', error);
+          });
+      }
+    }
+
+    // Crear una carta de Pokémon
+    function createPokemonCard(pokemon) {
+      const card = document.createElement('div');
+      card.classList.add('pokemon-card');
+
+      const name = document.createElement('h3');
+      name.classList.add('pokemon-name');
+      name.textContent = pokemon.name;
+
+      const image = document.createElement('img');
+      image.classList.add('pokemon-image');
+      image.src = pokemon.sprites.front_default;
+      image.alt = pokemon.name;
+
+      const removeButton = document.createElement('button');
+      removeButton.classList.add('remove-button');
+      removeButton.textContent = 'Eliminar';
+      removeButton.addEventListener('click', () => removeFromBag(pokemonBag.indexOf(pokemon)));
+      card.appendChild(name);
+      card.appendChild(image);
+      card.appendChild(removeButton);
+
+      return card;
+    }
+      // Función para convertir base64 a Blob
+  function b64toBlob(base64, contentType = '', sliceSize = 512) {
+    const byteCharacters = atob(base64);
+    const byteArrays = [];
+
+    for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+      const slice = byteCharacters.slice(offset, offset + sliceSize);
+
+      const byteNumbers = new Array(slice.length);
+      for (let i = 0; i < slice.length; i++) {
+        byteNumbers[i] = slice.charCodeAt(i);
+      }
+
+      const byteArray = new Uint8Array(byteNumbers);
+      byteArrays.push(byteArray);
+    }
+
+    return new Blob(byteArrays, { type: contentType });
+  }
+
+    // Agregar evento al formulario para enviar el PDF por correo electrónico
+    const emailForm = document.getElementById('email-form');
+    emailForm.addEventListener('submit', generatePDF);
+
+  </script>
+</body>
+</html>

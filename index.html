@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Pokédex</title>
+  <style>
+    /* Estilos CSS aquí */
+    body {
+      background-color: #ffcb05;
+      font-family: Arial, sans-serif;
+    }
+
+    h1 {
+      text-align: center;
+      color: #003a70;
+      margin-top: 20px;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 30px;
+    }
+
+    .pokemon-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 300px;
+      margin: 10px;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      background-color: #fff;
+      transition: transform 0.3s ease;
+    }
+
+    .pokemon-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .pokemon-name {
+      color: #003a70;
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .pokemon-type {
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .pokemon-type span {
+      display: inline-block;
+      padding: 5px 10px;
+      margin-right: 5px;
+      border-radius: 5px;
+      color: #fff;
+      font-weight: bold;
+    }
+
+    .type-normal {
+      background-color: #A8A878;
+    }
+
+    .type-fighting {
+      background-color: #C03028;
+    }
+
+    .type-flying {
+      background-color: #A890F0;
+    }
+
+    .type-poison {
+      background-color: #A040A0;
+    }
+
+    .type-ground {
+      background-color: #E0C068;
+    }
+
+    .type-rock {
+      background-color: #B8A038;
+    }
+
+    .type-bug {
+      background-color: #A8B820;
+    }
+
+    .type-ghost {
+      background-color: #705898;
+    }
+
+    .type-steel {
+      background-color: #B8B8D0;
+    }
+
+    .type-fire {
+      background-color: #F08030;
+    }
+
+    .type-water {
+      background-color: #6890F0;
+    }
+
+    .type-grass {
+      background-color: #78C850;
+    }
+
+    .type-electric {
+      background-color: #F8D030;
+    }
+
+    .type-psychic {
+      background-color: #F85888;
+    }
+
+    .type-ice {
+      background-color: #98D8D8;
+    }
+
+    .type-dragon {
+      background-color: #7038F8;
+    }
+
+    .type-dark {
+      background-color: #705848;
+    }
+
+    .type-fairy {
+      background-color: #EE99AC;
+    }
+
+    .type-unknown {
+      background-color: #68A090;
+    }
+
+    .type-shadow {
+      background-color: #444444;
+    }
+
+    .pokemon-image {
+      width: 150px;
+      height: 150px;
+      margin-bottom: 10px;
+    }
+
+    .cart-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 30px;
+    }
+
+    .cart-info {
+      display: flex;
+      align-items: center;
+      margin-right: 10px;
+    }
+
+    .cart-count {
+      font-weight: bold;
+      color: #003a70;
+      margin-right: 5px;
+    }
+
+    .cart-button {
+      background-color: #003a70;
+      color: #fff;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .cart-button:hover {
+      background-color: #00264d;
+    }
+
+    .cart-button:focus {
+      outline: none;
+    }
+
+    .clear-bag-button {
+      background-color: #ff3b30;
+      color: #fff;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+
+    .clear-bag-button:hover {
+      background-color: #c70000;
+    }
+
+    .clear-bag-button:focus {
+      outline: none;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Pokédex</h1>
+
+  <div class="cart-container">
+    <div class="cart-info">
+      <h3>Pokémon guardados:</h3>
+      <p class="cart-count" id="cart-count-bottom">0</p>
+    </div>
+    <button class="cart-button" id="view-bag">Ver Bolsa</button>
+    <button class="clear-bag-button" id="clear-bag">Vaciar Bolsa</button>
+  </div>
+
+  <div class="container" id="pokemon-container"></div>
+
+  <script src="https://pokeapi.co/api/v2/pokemon?limit=100&offset=0"></script>
+  <script>
+    // Obtener referencia al botón "Ver Bolsa"
+    const viewBagButton = document.getElementById('view-bag');
+    // Obtener referencia al botón "Vaciar Bolsa"
+    const clearBagButton = document.getElementById('clear-bag');
+
+    // Manejar el evento de clic del botón "Ver Bolsa"
+    viewBagButton.addEventListener('click', function() {
+      window.location.href = 'bag.html';
+    });
+
+    // Obtener datos de la bolsa desde localStorage
+    const bagData = localStorage.getItem('pokemon-bag');
+    const pokemonBag = bagData ? JSON.parse(bagData) : [];
+
+    // Función para agregar Pokémon a la bolsa
+    function addToBag(pokemon) {
+      pokemonBag.push(pokemon);
+      localStorage.setItem('pokemon-bag', JSON.stringify(pokemonBag));
+      updateCartCount();
+    }
+
+    // Función para vaciar la bolsa
+    function clearBag() {
+      pokemonBag.length = 0;
+      localStorage.removeItem('pokemon-bag');
+      updateCartCount();
+    }
+
+    // Función para actualizar el contador de la bolsa
+    function updateCartCount() {
+      const cartCountBottom = document.getElementById('cart-count-bottom');
+      cartCountBottom.textContent = pokemonBag.length;
+    }
+
+    // Fetch data from the Pokémon API
+    fetch('https://pokeapi.co/api/v2/pokemon?limit=100&offset=0')
+      .then(response => response.json())
+      .then(data => {
+        const pokemonContainer = document.getElementById('pokemon-container');
+
+        // Iterate through the results and create Pokémon cards
+        data.results.forEach(pokemon => {
+          fetch(pokemon.url)
+            .then(response => response.json())
+            .then(pokemonData => {
+              const pokemonCard = createPokemonCard(pokemonData);
+              pokemonContainer.appendChild(pokemonCard);
+
+              // Add event listener to the "Add to Bag" button
+              const addToBagButton = pokemonCard.querySelector('.bag-button');
+              addToBagButton.addEventListener('click', () => addToBag(pokemonData));
+            });
+        });
+      });
+
+    // Create a Pokémon card
+    function createPokemonCard(pokemon) {
+      const card = document.createElement('div');
+      card.classList.add('pokemon-card');
+
+      const name = document.createElement('h3');
+      name.classList.add('pokemon-name');
+      name.textContent = pokemon.name;
+
+      const image = document.createElement('img');
+      image.classList.add('pokemon-image');
+      image.src = pokemon.sprites.front_default;
+      image.alt = pokemon.name;
+
+      const types = document.createElement('div');
+      types.classList.add('pokemon-type');
+      pokemon.types.forEach(type => {
+        const typeSpan = document.createElement('span');
+        typeSpan.textContent = type.type.name;
+        typeSpan.classList.add(`type-${type.type.name}`);
+        types.appendChild(typeSpan);
+      });
+
+      const addToBagButton = document.createElement('button');
+      addToBagButton.classList.add('bag-button');
+      addToBagButton.textContent = 'Agregar a la Bolsa';
+
+      card.appendChild(name);
+      card.appendChild(image);
+      card.appendChild(types);
+      card.appendChild(addToBagButton);
+
+      return card;
+    }
+
+    // Agregar evento al botón "Vaciar Bolsa"
+    clearBagButton.addEventListener('click', clearBag);
+  </script>
+</body>
+</html>
